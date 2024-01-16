@@ -13,6 +13,11 @@ app.post('/', function requestHandler(req, res) {
     try {
         const PARAMETROS = req.body
         console.log(PARAMETROS)
+        if (!PARAMETROS?.to || !PARAMETROS?.subject || !PARAMETROS?.text || !PARAMETROS?.html) {
+            console.log("revisar parametros")
+            res.status(500).send({ stat: false })
+            return
+        }
 
         const msg = {
             to: PARAMETROS.to, 
@@ -24,14 +29,16 @@ app.post('/', function requestHandler(req, res) {
         sgMail
             .send(msg)
             .then(() => {
+                console.log('Email sent')
                 res.status(200).send({ stat: true })
             })
             .catch((error) => {
-                res.status(200).send({ stat: false })
+                console.log('Error ', error)
+                res.status(500).send({ stat: false })
             })
     } catch (error) {
         console.log(error)
-        res.status(200).send({ stat: false })
+        res.status(500).send({ stat: false })
     }    
     
 });
