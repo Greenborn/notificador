@@ -10,25 +10,29 @@ app.use(bodyParser.json())
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 app.post('/', function requestHandler(req, res) {
-    const PARAMETROS = req.body
-    console.log(PARAMETROS)
+    try {
+        const PARAMETROS = req.body
+        console.log(PARAMETROS)
 
-    const msg = {
-        to: PARAMETROS.to, 
-        from: 'registro.gfc@greenborn.com.ar', 
-        subject: PARAMETROS.subject,
-        text: PARAMETROS.text,
-        html: PARAMETROS.html,
-    }
-    sgMail
-        .send(msg)
-        .then(() => {
-            res.status(200).send({ stat: true })
-        })
-        .catch((error) => {
-            res.status(200).send({ stat: false })
-        })
-        
+        const msg = {
+            to: PARAMETROS.to, 
+            from: 'registro.gfc@greenborn.com.ar', 
+            subject: PARAMETROS.subject,
+            text: PARAMETROS.text,
+            html: PARAMETROS.html,
+        }
+        sgMail
+            .send(msg)
+            .then(() => {
+                res.status(200).send({ stat: true })
+            })
+            .catch((error) => {
+                res.status(200).send({ stat: false })
+            })
+    } catch (error) {
+        console.log(error)
+        res.status(200).send({ stat: false })
+    }    
     
 });
 
