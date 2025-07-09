@@ -1,6 +1,6 @@
 {
   "name": "notificador",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Microservicio de envío de emails usando SendGrid",
   "main": "index.js",
   "scripts": {
