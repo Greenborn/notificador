@@ -65,7 +65,7 @@ pm2 startup
 
 ### Endpoint Principal
 
-**URL:** `POST /`
+**URL:** `POST /email`
 
 **Headers requeridos:**
 ```
@@ -86,7 +86,7 @@ Content-Type: application/json
 #### 1. Uso con cURL
 
 ```bash
-curl -X POST http://localhost:3000 \
+curl -X POST http://localhost:3000/email \
   -H "Content-Type: application/json" \
   -d '{
     "to": "usuario@ejemplo.com",
@@ -103,7 +103,7 @@ const fetch = require('node-fetch');
 
 async function enviarEmail() {
     try {
-        const response = await fetch('http://localhost:3000', {
+        const response = await fetch('http://localhost:3000/email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -133,7 +133,7 @@ import requests
 import json
 
 def enviar_email():
-    url = "http://localhost:3000"
+    url = "http://localhost:3000/email"
     datos = {
         "to": "usuario@ejemplo.com",
         "subject": "Notificación importante",
@@ -156,7 +156,7 @@ enviar_email()
 ```php
 <?php
 function enviarEmail() {
-    $url = 'http://localhost:3000';
+    $url = 'http://localhost:3000/email';
     $datos = [
         'to' => 'usuario@ejemplo.com',
         'subject' => 'Mensaje del sistema',
@@ -250,6 +250,32 @@ const datosReporte = {
 };
 ```
 
+## Scripts de Prueba
+
+### test-email.js
+
+Script interactivo para probar el envío de emails.
+
+```bash
+# Ejecutar script de prueba
+node tests/test-email.js
+```
+
+#### Características
+- ✅ Validación automática de formato de email
+- ✅ Interfaz interactiva por consola
+- ✅ Verificación de configuración del servidor
+- ✅ Email de prueba con diseño HTML profesional
+- ✅ Confirmación antes del envío
+
+#### Uso
+1. Ejecutar el script: `node tests/test-email.js`
+2. Ingresar dirección de email de destino
+3. Confirmar el envío (s/n)
+4. Revisar resultado en consola
+
+Para más detalles, consultar `tests/README.md`
+
 ## Monitoreo y Logs
 
 ### Verificación de Estado
@@ -328,7 +354,7 @@ app.post('/registrar-usuario', async (req, res) => {
             html: "<h1>Bienvenido</h1><p>Gracias por registrarte</p>"
         };
 
-        const response = await fetch('http://notificador:3000', {
+        const response = await fetch('http://notificador:3000/email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailData)
@@ -360,7 +386,7 @@ public function registrarUsuario(Request $request)
         'html' => '<h1>Bienvenido</h1><p>Gracias por registrarte en nuestro sistema.</p>'
     ];
 
-    $response = Http::post('http://notificador:3000', $emailData);
+    $response = Http::post('http://notificador:3000/email', $emailData);
     
     if ($response->json('stat')) {
         Log::info('Email de bienvenida enviado');

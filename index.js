@@ -9,7 +9,7 @@ app.use(express.json())
 app.use(bodyParser.json())
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
-app.post('/', function requestHandler(req, res) {
+app.post('/email', function requestHandler(req, res) {
     try {
         const PARAMETROS = req.body
         console.log(PARAMETROS)
