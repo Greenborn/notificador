@@ -44,6 +44,7 @@ app.post('/', function requestHandler(req, res) {
 });
 
 setTimeout(async () => {
-    const server = await app.listen(process.env.PUERTO);
-    console.log('Servidor escuchando en: ',process.env.PUERTO) 
+    const puerto = process.env.PUERTO || 3000;
+    const server = await app.listen(puerto);
+    console.log('Servidor escuchando en: ', puerto) 
 }, 100)
