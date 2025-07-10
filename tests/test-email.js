@@ -66,15 +66,16 @@ function validarEmail(email) {
 }
 
 // Función para enviar email
-async function enviarEmailPrueba(emailDestino) {
+async function enviarEmailPrueba(emailDestino, emailRemitente) {
     try {
         console.log('\n📧 Enviando email de prueba...');
         console.log(`📍 Destino: ${emailDestino}`);
+        console.log(`📤 Remitente: ${emailRemitente}`);
         console.log(`🌐 Servidor: ${SERVER_URL}/email`);
         
         const datosEmail = {
             to: emailDestino,
-            from: "pruebas@greenborn.com.ar",
+            from: emailRemitente,
             subject: TEST_EMAIL_TEMPLATE.subject,
             text: TEST_EMAIL_TEMPLATE.text,
             html: TEST_EMAIL_TEMPLATE.html
@@ -128,13 +129,30 @@ async function main() {
         // Solicitar email de destino
         let emailDestino = await pregunta('📧 Ingresa la dirección de email de destino: ');
         
-        // Validar email
+        // Validar email de destino
         while (!validarEmail(emailDestino)) {
-            console.log('❌ Email inválido. Por favor, ingresa un email válido.');
+            console.log('❌ Email de destino inválido. Por favor, ingresa un email válido.');
             emailDestino = await pregunta('📧 Ingresa la dirección de email de destino: ');
         }
 
-        console.log('✅ Email válido detectado');
+        console.log('✅ Email de destino válido detectado');
+        
+        // Solicitar email de remitente
+        let emailRemitente = await pregunta('📤 Ingresa la dirección de email del remitente: ');
+        
+        // Validar email de remitente
+        while (!validarEmail(emailRemitente)) {
+            console.log('❌ Email de remitente inválido. Por favor, ingresa un email válido.');
+            emailRemitente = await pregunta('📤 Ingresa la dirección de email del remitente: ');
+        }
+
+        console.log('✅ Email de remitente válido detectado');
+        
+        // Mostrar resumen
+        console.log('\n📋 Resumen del email:');
+        console.log(`   📤 Remitente: ${emailRemitente}`);
+        console.log(`   📧 Destino: ${emailDestino}`);
+        console.log(`   📝 Asunto: ${TEST_EMAIL_TEMPLATE.subject}`);
         
         // Confirmar envío
         const confirmacion = await pregunta('\n¿Deseas enviar el email de prueba? (s/n): ');
@@ -142,7 +160,7 @@ async function main() {
         if (confirmacion.toLowerCase() === 's' || confirmacion.toLowerCase() === 'si' || confirmacion.toLowerCase() === 'y' || confirmacion.toLowerCase() === 'yes') {
             console.log('\n🔄 Procesando envío...');
             
-            const resultado = await enviarEmailPrueba(emailDestino);
+            const resultado = await enviarEmailPrueba(emailDestino, emailRemitente);
             
             if (resultado) {
                 console.log('\n🎉 ¡Prueba completada exitosamente!');

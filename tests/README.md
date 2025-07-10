@@ -34,10 +34,12 @@ node test-email.js
    - Comprueba que `SENDGRID_API_KEY` esté configurada
    - Muestra la URL del servidor configurada
 
-2. **Solicitud de Email**
-   - Pide al usuario que ingrese una dirección de email
-   - Valida el formato del email
-   - Permite reintentar si el formato es inválido
+2. **Solicitud de Emails**
+   - Pide al usuario que ingrese la dirección de email de destino
+   - Valida el formato del email de destino
+   - Pide al usuario que ingrese la dirección de email del remitente
+   - Valida el formato del email del remitente
+   - Permite reintentar si algún formato es inválido
 
 3. **Confirmación**
    - Pide confirmación antes de enviar
@@ -59,7 +61,8 @@ El script lee las siguientes variables de entorno del archivo `.env`:
 
 El script envía un email con:
 
-- **Remitente:** "pruebas@greenborn.com.ar"
+- **Remitente:** Configurable por el usuario
+- **Destinatario:** Configurable por el usuario
 - **Asunto:** "Email de Prueba - Notificador"
 - **Contenido:** Email HTML profesional con:
   - Diseño responsive
@@ -193,6 +196,41 @@ El script requiere las siguientes dependencias (ya incluidas en el proyecto):
 **Error: "Alias no existe o está mal configurado"**
 - Verifica que el alias seleccionado tenga ambas variables configuradas
 - Asegúrate de que el bot tenga permisos en el grupo
+
+#### Ejemplo de Salida
+
+```
+🚀 Script de Prueba - Notificador de Emails
+============================================
+
+🔧 Verificando configuración...
+✅ SENDGRID_API_KEY configurada
+🌐 URL del servidor: http://localhost:3000
+
+📧 Ingresa la dirección de email de destino: usuario@ejemplo.com
+✅ Email de destino válido detectado
+📤 Ingresa la dirección de email del remitente: pruebas@greenborn.com.ar
+✅ Email de remitente válido detectado
+
+📋 Resumen del email:
+   📤 Remitente: pruebas@greenborn.com.ar
+   📧 Destino: usuario@ejemplo.com
+   📝 Asunto: Email de Prueba - Notificador
+
+¿Deseas enviar el email de prueba? (s/n): s
+
+🔄 Procesando envío...
+
+📧 Enviando email de prueba...
+📍 Destino: usuario@ejemplo.com
+📤 Remitente: pruebas@greenborn.com.ar
+🌐 Servidor: http://localhost:3000/email
+✅ Email enviado exitosamente!
+📊 Respuesta del servidor: {"stat":true}
+
+🎉 ¡Prueba completada exitosamente!
+📧 Revisa la bandeja de entrada del email de destino.
+```
 
 #### Integración con CI/CD
 
