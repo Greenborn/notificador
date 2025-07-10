@@ -1,4 +1,5 @@
 const sgMail = require('@sendgrid/mail')
+const TelegramBot = require('node-telegram-bot-api')
 require("dotenv").config({ path: '.env' })
 const express = require('express')
 const bodyParser = require("body-parser")
@@ -41,6 +42,68 @@ app.post('/email', function requestHandler(req, res) {
         res.status(500).send({ stat: false })
     }    
     
+});
+
+// Endpoint para enviar mensajes a Telegram usando alias
+app.post('/telegram', function telegramHandler(req, res) {
+    try {
+        const { alias, message, parse_mode, disable_web_page_preview, disable_notification } = req.body
+        console.log('Parámetros Telegram:', req.body)
+
+        if (!alias || !message) {
+            res.status(400).send({
+                stat: false,
+                error: "Parámetros requeridos: alias y message"
+            })
+            return
+        }
+
+        // Construir nombres de variables de entorno
+        const botTokenVar = `TELEGRAM_BOT_${alias.toUpperCase()}_TOKEN`
+        const chatIdVar = `TELEGRAM_${alias.toUpperCase()}_CHAT_ID`
+        const botToken = process.env[botTokenVar]
+        const chatId = process.env[chatIdVar]
+
+        if (!botToken || !chatId) {
+            res.status(400).send({
+                stat: false,
+                error: `Alias '${alias}' no existe o está mal configurado. Variables requeridas: ${botTokenVar}, ${chatIdVar}`
+            })
+            return
+        }
+
+        const telegramBot = new TelegramBot(botToken, { polling: false })
+        const options = {
+            parse_mode: parse_mode || 'HTML',
+            disable_web_page_preview: disable_web_page_preview || false,
+            disable_notification: disable_notification || false
+        }
+
+        telegramBot.sendMessage(chatId, message, options)
+            .then((response) => {
+                console.log(`Mensaje de Telegram enviado al alias '${alias}':`, response)
+                res.status(200).send({
+                    stat: true,
+                    alias,
+                    message_id: response.message_id,
+                    chat: response.chat
+                })
+            })
+            .catch((error) => {
+                console.log(`Error enviando mensaje de Telegram al alias '${alias}':`, error)
+                res.status(500).send({
+                    stat: false,
+                    error: error.message || 'Error al enviar mensaje de Telegram',
+                    alias
+                })
+            })
+    } catch (error) {
+        console.log('Error en endpoint de Telegram:', error)
+        res.status(500).send({
+            stat: false,
+            error: 'Error interno del servidor'
+        })
+    }
 });
 
 setTimeout(async () => {

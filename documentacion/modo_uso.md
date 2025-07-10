@@ -2,7 +2,7 @@
 
 ## Descripción
 
-El **Notificador** es un microservicio que permite enviar emails utilizando SendGrid. Este documento explica cómo configurar, desplegar y utilizar el módulo.
+El **Notificador** es un microservicio que permite enviar emails utilizando SendGrid y mensajes a grupos de Telegram. Este documento explica cómo configurar, desplegar y utilizar el módulo.
 
 ## Configuración Inicial
 
@@ -24,6 +24,17 @@ Crear el archivo `.env` en la raíz del proyecto:
 # Archivo .env
 SENDGRID_API_KEY=tu_api_key_de_sendgrid
 PUERTO=3000
+
+# Configuración de Telegram (sistema de alias)
+# Para cada alias que quieras usar, define:
+TELEGRAM_BOT_[ALIAS]_TOKEN=token_de_tu_bot
+TELEGRAM_[ALIAS]_CHAT_ID=id_del_grupo_o_chat
+
+# Ejemplos:
+TELEGRAM_BOT_ALERTAS_TOKEN=123456:ABCDEF
+TELEGRAM_ALERTAS_CHAT_ID=-123456789
+TELEGRAM_BOT_SOPORTE_TOKEN=987654:ZYXWVU
+TELEGRAM_SOPORTE_CHAT_ID=-987654321
 ```
 
 #### Obtención de API Key de SendGrid
@@ -33,11 +44,24 @@ PUERTO=3000
 3. Crear una nueva API Key con permisos de "Mail Send"
 4. Copiar la clave y agregarla al archivo `.env`
 
+#### Configuración de Telegram
+
+1. Crear un bot en Telegram usando [@BotFather](https://t.me/botfather)
+2. Obtener el token del bot
+3. Agregar el bot a un grupo o canal
+4. Obtener el Chat ID del grupo/canal
+5. Configurar las variables de entorno con el formato:
+   - `TELEGRAM_BOT_[ALIAS]_TOKEN=token_del_bot`
+   - `TELEGRAM_[ALIAS]_CHAT_ID=id_del_grupo`
+
 ### 3. Verificación de Configuración
 
 ```bash
 # Verificar que las variables están cargadas
 node -e "require('dotenv').config(); console.log('Puerto:', process.env.PUERTO); console.log('API Key:', process.env.SENDGRID_API_KEY ? 'Configurada' : 'Faltante');"
+
+# Verificar configuración de Telegram
+node -e "require('dotenv').config(); const telegramVars = Object.keys(process.env).filter(key => key.startsWith('TELEGRAM_')); console.log('Variables de Telegram:', telegramVars);"
 ```
 
 ## Despliegue
@@ -63,7 +87,7 @@ pm2 startup
 
 ## Uso de la API
 
-### Endpoint Principal
+### Endpoint de Email
 
 **URL:** `POST /email`
 
@@ -198,9 +222,120 @@ enviarEmail();
 }
 ```
 
+### Endpoint de Telegram
+
+**URL:** `POST /telegram`
+
+**Headers requeridos:**
+```
+Content-Type: application/json
+```
+
+### Parámetros de Entrada
+
+| Parámetro | Tipo   | Requerido | Descripción                    |
+|-----------|--------|-----------|--------------------------------|
+| `alias`   | string | Sí        | Alias configurado en variables de entorno |
+| `message` | string | Sí        | Contenido del mensaje          |
+| `parse_mode` | string | No     | Modo de formato ('HTML', 'Markdown') |
+| `disable_web_page_preview` | boolean | No | Deshabilitar vista previa de enlaces |
+| `disable_notification` | boolean | No | Enviar sin notificación |
+
+### Ejemplos de Uso
+
+#### 1. Uso con cURL
+
+```bash
+curl -X POST http://localhost:3000/telegram \
+  -H "Content-Type: application/json" \
+  -d '{
+    "alias": "alertas",
+    "message": "<b>Alerta</b>\nSe detectó un error crítico.",
+    "parse_mode": "HTML"
+  }'
+```
+
+#### 2. Uso con JavaScript/Node.js
+
+```javascript
+const fetch = require('node-fetch');
+
+async function enviarMensajeTelegram() {
+    try {
+        const response = await fetch('http://localhost:3000/telegram', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                alias: 'alertas',
+                message: '🚨 <b>Alerta del Sistema</b>\n\nSe ha detectado un error crítico en el servidor.\n\n<i>Timestamp:</i> ' + new Date().toISOString(),
+                parse_mode: 'HTML'
+            })
+        });
+
+        const resultado = await response.json();
+        console.log('Resultado:', resultado);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+enviarMensajeTelegram();
+```
+
+#### 3. Uso con Python
+
+```python
+import requests
+import json
+from datetime import datetime
+
+def enviar_telegram():
+    url = "http://localhost:3000/telegram"
+    datos = {
+        "alias": "alertas",
+        "message": f"🚨 <b>Alerta del Sistema</b>\n\nSe ha detectado un error crítico.\n\n<i>Timestamp:</i> {datetime.now().isoformat()}",
+        "parse_mode": "HTML"
+    }
+    
+    try:
+        response = requests.post(url, json=datos)
+        resultado = response.json()
+        print(f"Estado: {resultado}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+enviar_telegram()
+```
+
+### Respuestas de la API
+
+#### Respuesta Exitosa (200)
+```json
+{
+    "stat": true,
+    "alias": "alertas",
+    "message_id": 123,
+    "chat": {
+        "id": -123456789,
+        "title": "Grupo de Alertas",
+        "type": "group"
+    }
+}
+```
+
+#### Respuesta de Error (400/500)
+```json
+{
+    "stat": false,
+    "error": "Alias 'alertas' no existe o está mal configurado. Variables requeridas: TELEGRAM_BOT_ALERTAS_TOKEN, TELEGRAM_ALERTAS_CHAT_ID"
+}
+```
+
 ## Casos de Uso Comunes
 
-### 1. Notificación de Registro de Usuario
+### 1. Notificación de Registro de Usuario (Email)
 
 ```javascript
 const datosRegistro = {
@@ -216,10 +351,11 @@ const datosRegistro = {
 };
 ```
 
-### 2. Notificación de Error del Sistema
+### 2. Notificación de Error del Sistema (Email + Telegram)
 
 ```javascript
-const datosError = {
+// Email para administradores
+const datosErrorEmail = {
     to: "admin@greenborn.com.ar",
     subject: "Error en el sistema",
     text: `Se ha detectado un error: ${error.message}`,
@@ -230,12 +366,20 @@ const datosError = {
         <p><strong>Stack:</strong> ${error.stack}</p>
     `
 };
+
+// Telegram para alertas inmediatas
+const datosErrorTelegram = {
+    alias: "alertas",
+    message: `🚨 <b>Error Crítico del Sistema</b>\n\n<b>Error:</b> ${error.message}\n<b>Fecha:</b> ${new Date().toISOString()}\n\n<i>Se ha enviado un email detallado a administración.</i>`,
+    parse_mode: "HTML"
+};
 ```
 
-### 3. Reporte Automático
+### 3. Reporte Automático (Email + Telegram)
 
 ```javascript
-const datosReporte = {
+// Email detallado
+const datosReporteEmail = {
     to: "gerencia@greenborn.com.ar",
     subject: "Reporte Diario - " + new Date().toLocaleDateString(),
     text: `Reporte diario generado. Total de usuarios: ${totalUsuarios}`,
@@ -247,6 +391,23 @@ const datosReporte = {
             <tr><td>Fecha:</td><td>${new Date().toLocaleDateString()}</td></tr>
         </table>
     `
+};
+
+// Resumen en Telegram
+const datosReporteTelegram = {
+    alias: "admin",
+    message: `📊 <b>Reporte Diario</b>\n\n👥 Total usuarios: ${totalUsuarios}\n🆕 Nuevos registros: ${nuevosRegistros}\n📅 Fecha: ${new Date().toLocaleDateString()}\n\n<i>Reporte completo enviado por email.</i>`,
+    parse_mode: "HTML"
+};
+```
+
+### 4. Notificación de Soporte (Telegram)
+
+```javascript
+const datosSoporte = {
+    alias: "soporte",
+    message: `🆘 <b>Nuevo Ticket de Soporte</b>\n\n<b>Usuario:</b> ${usuario.nombre}\n<b>Asunto:</b> ${ticket.asunto}\n<b>Prioridad:</b> ${ticket.prioridad}\n<b>Fecha:</b> ${new Date().toISOString()}\n\n<i>Revisar sistema de tickets para más detalles.</i>`,
+    parse_mode: "HTML"
 };
 ```
 
@@ -274,6 +435,29 @@ node tests/test-email.js
 3. Confirmar el envío (s/n)
 4. Revisar resultado en consola
 
+### test-telegram.js
+
+Script interactivo para probar el envío de mensajes a Telegram.
+
+```bash
+# Ejecutar script de prueba
+node tests/test-telegram.js
+```
+
+#### Características
+- ✅ Listado automático de alias configurados
+- ✅ Interfaz interactiva por consola
+- ✅ Verificación de configuración del servidor
+- ✅ Mensaje de prueba con formato HTML
+- ✅ Confirmación antes del envío
+
+#### Uso
+1. Ejecutar el script: `node tests/test-telegram.js`
+2. Seleccionar alias de la lista
+3. Ingresar mensaje personalizado (opcional)
+4. Confirmar el envío (s/n)
+5. Revisar resultado en consola
+
 Para más detalles, consultar `tests/README.md`
 
 ## Monitoreo y Logs
@@ -292,32 +476,46 @@ tail -f logs/notificador.log
 
 - **Inicio del servidor**: "Servidor escuchando en: PUERTO"
 - **Email enviado**: "Email sent"
+- **Mensaje de Telegram enviado**: "Telegram message sent"
 - **Error de SendGrid**: "Error [detalles]"
+- **Error de Telegram**: "Telegram error [detalles]"
 - **Parámetros recibidos**: Log de los datos de entrada
 
 ## Troubleshooting
 
 ### Problemas Comunes
 
-#### 1. Error de API Key
+#### 1. Error de API Key (SendGrid)
 ```
 Error: Forbidden
 ```
 **Solución:** Verificar que la API Key de SendGrid sea válida y tenga permisos de "Mail Send".
 
-#### 2. Error de Parámetros
+#### 2. Error de Token de Bot (Telegram)
+```
+Alias 'alertas' no existe o está mal configurado
+```
+**Solución:** Verificar que las variables `TELEGRAM_BOT_[ALIAS]_TOKEN` y `TELEGRAM_[ALIAS]_CHAT_ID` estén configuradas correctamente.
+
+#### 3. Error de Parámetros (Email)
 ```
 revisar parametros
 ```
 **Solución:** Asegurar que todos los parámetros requeridos (`to`, `subject`, `text`, `html`) estén presentes.
 
-#### 3. Error de Conexión
+#### 4. Error de Parámetros (Telegram)
+```
+Alias requerido
+```
+**Solución:** Asegurar que el parámetro `alias` esté presente y corresponda a una configuración válida.
+
+#### 5. Error de Conexión
 ```
 Error: connect ECONNREFUSED
 ```
 **Solución:** Verificar que el servidor esté ejecutándose y el puerto sea correcto.
 
-#### 4. Error de Puerto en Uso
+#### 6. Error de Puerto en Uso
 ```
 Error: listen EADDRINUSE
 ```
@@ -329,8 +527,14 @@ Error: listen EADDRINUSE
 # Verificar variables de entorno
 node -e "require('dotenv').config(); console.log(process.env);"
 
+# Verificar configuración de Telegram
+node -e "require('dotenv').config(); const telegramVars = Object.keys(process.env).filter(key => key.startsWith('TELEGRAM_')); console.log('Variables de Telegram:', telegramVars);"
+
 # Verificar conectividad con SendGrid
 curl -H "Authorization: Bearer $SENDGRID_API_KEY" https://api.sendgrid.com/v3/user/profile
+
+# Verificar conectividad con Telegram (reemplazar con tu token)
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_ALERTAS_TOKEN/getMe"
 
 # Verificar logs del sistema
 journalctl -u notificador -f
@@ -354,14 +558,30 @@ app.post('/registrar-usuario', async (req, res) => {
             html: "<h1>Bienvenido</h1><p>Gracias por registrarte</p>"
         };
 
-        const response = await fetch('http://notificador:3000/email', {
+        const emailResponse = await fetch('http://notificador:3000/email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailData)
         });
 
-        const resultado = await response.json();
-        console.log('Email enviado:', resultado);
+        const emailResultado = await emailResponse.json();
+        console.log('Email enviado:', emailResultado);
+
+        // Notificar a administración por Telegram
+        const telegramData = {
+            alias: "admin",
+            message: `👋 <b>Nuevo Usuario Registrado</b>\n\n<b>Email:</b> ${req.body.email}\n<b>Fecha:</b> ${new Date().toISOString()}`,
+            parse_mode: "HTML"
+        };
+
+        const telegramResponse = await fetch('http://notificador:3000/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(telegramData)
+        });
+
+        const telegramResultado = await telegramResponse.json();
+        console.log('Notificación Telegram enviada:', telegramResultado);
 
         res.json({ success: true });
     } catch (error) {
