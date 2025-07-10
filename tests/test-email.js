@@ -74,6 +74,7 @@ async function enviarEmailPrueba(emailDestino) {
         
         const datosEmail = {
             to: emailDestino,
+            from: "pruebas@greenborn.com.ar",
             subject: TEST_EMAIL_TEMPLATE.subject,
             text: TEST_EMAIL_TEMPLATE.text,
             html: TEST_EMAIL_TEMPLATE.html

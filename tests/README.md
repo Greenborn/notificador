@@ -59,6 +59,7 @@ El script lee las siguientes variables de entorno del archivo `.env`:
 
 El script envía un email con:
 
+- **Remitente:** "pruebas@greenborn.com.ar"
 - **Asunto:** "Email de Prueba - Notificador"
 - **Contenido:** Email HTML profesional con:
   - Diseño responsive

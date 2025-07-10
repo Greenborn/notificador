@@ -22,7 +22,7 @@ app.post('/email', function requestHandler(req, res) {
 
         const msg = {
             to: PARAMETROS.to, 
-            from: 'registro.gfc@greenborn.com.ar', 
+            from: PARAMETROS?.from, 
             subject: PARAMETROS.subject,
             text: PARAMETROS.text,
             html: PARAMETROS.html,

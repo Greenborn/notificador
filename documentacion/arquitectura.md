@@ -52,7 +52,7 @@ El **Notificador** es un microservicio especializado en el envío de notificacio
 ### 4. Integración SendGrid
 - **Librería**: `@sendgrid/mail`
 - **Configuración**: API Key mediante variable de entorno
-- **Remitente**: `registro.gfc@greenborn.com.ar` (fijo)
+- **Remitente**: Configurable mediante parámetro `from`
 
 ### 5. Integración Telegram
 - **Librería**: `node-telegram-bot-api`
@@ -72,6 +72,7 @@ app.post('/email', function requestHandler(req, res) {
 
 ### 2. Validación de Parámetros
 - `to`: Destinatario (requerido)
+- `from`: Remitente (requerido)
 - `subject`: Asunto (requerido)
 - `text`: Contenido texto plano (requerido)
 - `html`: Contenido HTML (requerido)
@@ -80,7 +81,7 @@ app.post('/email', function requestHandler(req, res) {
 ```javascript
 const msg = {
     to: PARAMETROS.to,
-    from: 'registro.gfc@greenborn.com.ar',
+    from: PARAMETROS.from,
     subject: PARAMETROS.subject,
     text: PARAMETROS.text,
     html: PARAMETROS.html,
@@ -239,7 +240,6 @@ const response = await fetch('/telegram', {
 ### Limitaciones
 - No implementa rate limiting
 - No tiene autenticación de clientes
-- Remitente de email fijo (no configurable)
 
 ## Escalabilidad
 

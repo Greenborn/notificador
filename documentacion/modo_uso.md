@@ -101,6 +101,7 @@ Content-Type: application/json
 | Parámetro | Tipo   | Requerido | Descripción                    |
 |-----------|--------|-----------|--------------------------------|
 | `to`      | string | Sí        | Email del destinatario         |
+| `from`    | string | Sí        | Email del remitente            |
 | `subject` | string | Sí        | Asunto del email               |
 | `text`    | string | Sí        | Contenido en texto plano       |
 | `html`    | string | Sí        | Contenido en formato HTML      |
@@ -114,6 +115,7 @@ curl -X POST http://localhost:3000/email \
   -H "Content-Type: application/json" \
   -d '{
     "to": "usuario@ejemplo.com",
+    "from": "registro@greenborn.com.ar",
     "subject": "Bienvenido al sistema",
     "text": "Gracias por registrarte en nuestro sistema.",
     "html": "<h1>Bienvenido</h1><p>Gracias por registrarte en nuestro sistema.</p>"
@@ -134,6 +136,7 @@ async function enviarEmail() {
             },
             body: JSON.stringify({
                 to: 'usuario@ejemplo.com',
+                from: 'registro@greenborn.com.ar',
                 subject: 'Confirmación de registro',
                 text: 'Tu cuenta ha sido creada exitosamente.',
                 html: '<h1>Cuenta Creada</h1><p>Tu cuenta ha sido creada exitosamente.</p>'
@@ -160,6 +163,7 @@ def enviar_email():
     url = "http://localhost:3000/email"
     datos = {
         "to": "usuario@ejemplo.com",
+        "from": "notificaciones@greenborn.com.ar",
         "subject": "Notificación importante",
         "text": "Este es un mensaje importante.",
         "html": "<h1>Notificación</h1><p>Este es un mensaje importante.</p>"
@@ -183,6 +187,7 @@ function enviarEmail() {
     $url = 'http://localhost:3000/email';
     $datos = [
         'to' => 'usuario@ejemplo.com',
+        'from' => 'sistema@greenborn.com.ar',
         'subject' => 'Mensaje del sistema',
         'text' => 'Este es un mensaje del sistema.',
         'html' => '<h1>Sistema</h1><p>Este es un mensaje del sistema.</p>'
@@ -340,6 +345,7 @@ enviar_telegram()
 ```javascript
 const datosRegistro = {
     to: nuevoUsuario.email,
+    from: "registro@greenborn.com.ar",
     subject: "Bienvenido a Greenborn",
     text: `Hola ${nuevoUsuario.nombre}, tu cuenta ha sido creada exitosamente.`,
     html: `
@@ -357,6 +363,7 @@ const datosRegistro = {
 // Email para administradores
 const datosErrorEmail = {
     to: "admin@greenborn.com.ar",
+    from: "sistema@greenborn.com.ar",
     subject: "Error en el sistema",
     text: `Se ha detectado un error: ${error.message}`,
     html: `
@@ -381,6 +388,7 @@ const datosErrorTelegram = {
 // Email detallado
 const datosReporteEmail = {
     to: "gerencia@greenborn.com.ar",
+    from: "reportes@greenborn.com.ar",
     subject: "Reporte Diario - " + new Date().toLocaleDateString(),
     text: `Reporte diario generado. Total de usuarios: ${totalUsuarios}`,
     html: `
@@ -553,6 +561,7 @@ app.post('/registrar-usuario', async (req, res) => {
         // Enviar email de bienvenida
         const emailData = {
             to: req.body.email,
+            from: "registro@greenborn.com.ar",
             subject: "Bienvenido",
             text: "Gracias por registrarte",
             html: "<h1>Bienvenido</h1><p>Gracias por registrarte</p>"
@@ -601,6 +610,7 @@ public function registrarUsuario(Request $request)
     // Enviar email de bienvenida
     $emailData = [
         'to' => $request->email,
+        'from' => 'registro@greenborn.com.ar',
         'subject' => 'Bienvenido a Greenborn',
         'text' => 'Gracias por registrarte en nuestro sistema.',
         'html' => '<h1>Bienvenido</h1><p>Gracias por registrarte en nuestro sistema.</p>'

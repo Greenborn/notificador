@@ -102,6 +102,7 @@ Envía un email utilizando SendGrid.
 
 **Parámetros requeridos:**
 - `to`: Email del destinatario
+- `from`: Email del remitente
 - `subject`: Asunto del email
 - `text`: Contenido en texto plano
 - `html`: Contenido en formato HTML
@@ -243,6 +244,7 @@ pm2 startup
 ```javascript
 const emailData = {
     to: "nuevo@usuario.com",
+    from: "registro@greenborn.com.ar",
     subject: "Bienvenido a Greenborn",
     text: "Tu cuenta ha sido creada exitosamente.",
     html: "<h1>Bienvenido</h1><p>Tu cuenta ha sido creada exitosamente.</p>"
@@ -253,6 +255,7 @@ const emailData = {
 ```javascript
 const alertData = {
     to: "admin@greenborn.com.ar",
+    from: "sistema@greenborn.com.ar",
     subject: "Alerta del Sistema",
     text: "Se ha detectado un error crítico.",
     html: "<h1>Alerta</h1><p>Se ha detectado un error crítico.</p>"
@@ -321,6 +324,11 @@ Para soporte técnico o preguntas sobre el proyecto:
 - 📖 Documentación: [Ver documentación](./documentacion/)
 
 ## Changelog
+
+### v1.3.0
+- ✅ Parámetro `from` requerido en endpoint de email
+- ✅ Remitente configurable en lugar de fijo
+- ✅ Documentación actualizada con nuevos parámetros
 
 ### v1.2.0
 - ✅ Sistema de alias para Telegram
