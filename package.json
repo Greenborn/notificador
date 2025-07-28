@@ -1,6 +1,6 @@
 {
   "name": "notificador",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Microservicio de envío de emails usando SendGrid y mensajes a grupos de Telegram",
   "main": "index.js",
   "scripts": {
