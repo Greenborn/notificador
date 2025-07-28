@@ -6,12 +6,26 @@ const bodyParser = require("body-parser")
 const rateLimit = require('express-rate-limit')
 const emailHandler = require('./email')
 const telegramHandler = require('./telegram')
+const cors = require('cors')
 
 const app = express()
 app.use(express.json())
 
 app.use(bodyParser.json())
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
+// Configuración de CORS
+const allowedOrigins = (process.env.CORS_ORIGINS || '*').split(',').map(o => o.trim())
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (allowedOrigins.includes('*') || !origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+        } else {
+            callback(new Error('No permitido por CORS'))
+        }
+    }
+}
+app.use(cors(corsOptions))
 
 app.post('/email', emailHandler)
 
