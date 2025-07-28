@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const readline = require('readline');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
@@ -70,10 +70,14 @@ function encontrarAliasTelegram() {
 
 // Función para enviar mensaje de Telegram
 async function enviarMensajeTelegram(alias, mensaje) {
+    if (!process.env.TELEGRAM_API_TOKEN) {
+        console.log('\u26a0\ufe0f  ERROR: TELEGRAM_API_TOKEN no está definido en el .env');
+        return false;
+    }
     try {
-        console.log('\n📱 Enviando mensaje de Telegram...');
-        console.log(`📍 Alias: ${alias.name}`);
-        console.log(`🌐 Servidor: ${SERVER_URL}/telegram`);
+        console.log('\n\ud83d\udcf1 Enviando mensaje de Telegram...');
+        console.log(`\ud83d\udccd Alias: ${alias.name}`);
+        console.log(`\ud83c\udf10 Servidor: ${SERVER_URL}/telegram`);
         
         const datosMensaje = {
             alias: alias.name,
@@ -82,29 +86,31 @@ async function enviarMensajeTelegram(alias, mensaje) {
             token: process.env.TELEGRAM_API_TOKEN
         };
 
-        const response = await fetch(`${SERVER_URL}/telegram`, {
-            method: 'POST',
+        const response = await axios.post(`${SERVER_URL}/telegram`, datosMensaje, {
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datosMensaje)
+            }
         });
 
-        const resultado = await response.json();
+        const resultado = response.data;
 
         if (resultado.stat) {
-            console.log('✅ Mensaje enviado exitosamente!');
-            console.log(`📊 Respuesta del servidor: ${JSON.stringify(resultado)}`);
+            console.log('\u2705 Mensaje enviado exitosamente!');
+            console.log(`\ud83d\udcca Respuesta del servidor: ${JSON.stringify(resultado)}`);
             return true;
         } else {
-            console.log('❌ Error al enviar el mensaje');
-            console.log(`📊 Respuesta del servidor: ${JSON.stringify(resultado)}`);
+            console.log('\u274c Error al enviar el mensaje');
+            console.log(`\ud83d\udcca Respuesta del servidor: ${JSON.stringify(resultado)}`);
             return false;
         }
 
     } catch (error) {
-        console.log('❌ Error de conexión:', error.message);
-        console.log('💡 Verifica que el servidor esté ejecutándose en:', SERVER_URL);
+        if (error.response) {
+            console.log('\u274c Error en la respuesta del servidor:', error.response.data);
+        } else {
+            console.log('\u274c Error de conexión:', error.message);
+        }
+        console.log('\ud83d\udca1 Verifica que el servidor esté ejecutándose en:', SERVER_URL);
         return false;
     }
 }
