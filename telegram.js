@@ -1,6 +1,10 @@
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config({ path: '.env' })
 
+const COLA_TELEGRAM = [];
+const INTERVALO_ENVIO = parseInt(process.env.TELEGRAM_SEND_INTERVAL_MS) || 10000;
+let procesandoCola = false;
+
 function telegramHandler(req, res) {
     try {
         const { alias, message, parse_mode, disable_web_page_preview, disable_notification, token } = req.body
@@ -18,45 +22,9 @@ function telegramHandler(req, res) {
             return
         }
 
-        // Construir nombres de variables de entorno
-        const botTokenVar = `TELEGRAM_BOT_${alias.toUpperCase()}_TOKEN`
-        const chatIdVar = `TELEGRAM_${alias.toUpperCase()}_CHAT_ID`
-        const botToken = process.env[botTokenVar]
-        const chatId = process.env[chatIdVar]
-
-        if (!botToken || !chatId) {
-            res.status(400).send({
-                stat: false,
-                error: `Revise configuración`
-            })
-            return
-        }
-
-        const telegramBot = new TelegramBot(botToken, { polling: false })
-        const options = {
-            parse_mode: parse_mode || 'HTML',
-            disable_web_page_preview: disable_web_page_preview || false,
-            disable_notification: disable_notification || false
-        }
-
-        telegramBot.sendMessage(chatId, message, options)
-            .then((response) => {
-                console.log(`Mensaje de Telegram enviado al alias '${alias}':`, response)
-                res.status(200).send({
-                    stat: true,
-                    alias,
-                    message_id: response.message_id,
-                    chat: response.chat
-                })
-            })
-            .catch((error) => {
-                console.log(`Error enviando mensaje de Telegram al alias '${alias}':`, error)
-                res.status(500).send({
-                    stat: false,
-                    error: error.message || 'Error al enviar mensaje de Telegram',
-                    alias
-                })
-            })
+        // Agregar mensaje a la cola
+        COLA_TELEGRAM.push({ alias, message, parse_mode, disable_web_page_preview, disable_notification })
+        res.status(200).send({ stat: true, enCola: COLA_TELEGRAM.length })
     } catch (error) {
         console.log('Error en endpoint de Telegram:', error)
         res.status(500).send({
@@ -65,5 +33,38 @@ function telegramHandler(req, res) {
         })
     }
 }
+
+async function procesarColaTelegram() {
+    if (procesandoCola) return;
+    procesandoCola = true;
+    while (COLA_TELEGRAM.length > 0) {
+        const item = COLA_TELEGRAM.shift();
+        try {
+            // Buscar configuración de alias
+            const botTokenVar = `TELEGRAM_BOT_${item.alias.toUpperCase()}_TOKEN`
+            const chatIdVar = `TELEGRAM_${item.alias.toUpperCase()}_CHAT_ID`
+            const botToken = process.env[botTokenVar]
+            const chatId = process.env[chatIdVar]
+            if (!botToken || !chatId) {
+                console.log(`[COLA_TELEGRAM] Alias '${item.alias}' mal configurado.`)
+                continue;
+            }
+            const telegramBot = new TelegramBot(botToken, { polling: false })
+            const options = {
+                parse_mode: item.parse_mode || 'HTML',
+                disable_web_page_preview: item.disable_web_page_preview || false,
+                disable_notification: item.disable_notification || false
+            }
+            await telegramBot.sendMessage(chatId, item.message, options)
+            console.log(`[COLA_TELEGRAM] Mensaje enviado a '${item.alias}'`)
+        } catch (err) {
+            console.log(`[COLA_TELEGRAM] Error enviando mensaje a '${item.alias}':`, err.message)
+        }
+        await new Promise(r => setTimeout(r, INTERVALO_ENVIO))
+    }
+    procesandoCola = false;
+}
+
+setInterval(procesarColaTelegram, INTERVALO_ENVIO)
 
 module.exports = telegramHandler; 
