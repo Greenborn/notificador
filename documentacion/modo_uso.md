@@ -25,6 +25,12 @@ Crear el archivo `.env` en la raíz del proyecto:
 SENDGRID_API_KEY=tu_api_key_de_sendgrid
 PUERTO=3000
 
+# Token de autenticación para el endpoint /email
+EMAIL_API_TOKEN=mi_token_secreto
+
+# Token de autenticación para el endpoint /telegram
+TELEGRAM_API_TOKEN=mi_token_telegram
+
 # Configuración de Telegram (sistema de alias)
 # Para cada alias que quieras usar, define:
 TELEGRAM_BOT_[ALIAS]_TOKEN=token_de_tu_bot
@@ -94,6 +100,17 @@ pm2 startup
 
 **URL:** `POST /email`
 
+**Autenticación:** Este endpoint requiere un token de API. Debes enviar el parámetro `token` en el body de la petición, cuyo valor debe coincidir con la variable `EMAIL_API_TOKEN` configurada en el archivo `.env`.
+
+Si el token es incorrecto o falta, la respuesta será:
+
+```json
+{
+    "stat": false,
+    "error": "No autorizado"
+}
+```
+
 **Headers requeridos:**
 ```
 Content-Type: application/json
@@ -108,6 +125,7 @@ Content-Type: application/json
 | `subject` | string | Sí        | Asunto del email               |
 | `text`    | string | Sí        | Contenido en texto plano       |
 | `html`    | string | Sí        | Contenido en formato HTML      |
+| `token`   | string | Sí        | Token de autenticación         |
 
 ### Ejemplos de Uso
 
@@ -234,12 +252,14 @@ enviarEmail();
 
 **URL:** `POST /telegram`
 
-**Rate limit:** Por defecto, cada IP puede enviar hasta 5 mensajes por hora a este endpoint. Este límite se puede configurar con la variable `TELEGRAM_RATE_LIMIT` en el archivo `.env`. Si se supera el límite, la API responderá:
+**Autenticación:** Este endpoint requiere un token de API. Debes enviar el parámetro `token` en el body de la petición, cuyo valor debe coincidir con la variable `TELEGRAM_API_TOKEN` configurada en el archivo `.env`.
+
+Si el token es incorrecto o falta, la respuesta será:
 
 ```json
 {
     "stat": false,
-    "error": "Demasiados mensajes enviados desde esta IP. Intenta nuevamente en una hora."
+    "error": "No autorizado"
 }
 ```
 
@@ -254,6 +274,7 @@ Content-Type: application/json
 |-----------|--------|-----------|--------------------------------|
 | `alias`   | string | Sí        | Alias configurado en variables de entorno |
 | `message` | string | Sí        | Contenido del mensaje          |
+| `token`   | string | Sí        | Token de autenticación         |
 | `parse_mode` | string | No     | Modo de formato ('HTML', 'Markdown') |
 | `disable_web_page_preview` | boolean | No | Deshabilitar vista previa de enlaces |
 | `disable_notification` | boolean | No | Enviar sin notificación |

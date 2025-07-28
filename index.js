@@ -14,6 +14,10 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 app.post('/email', function requestHandler(req, res) {
     try {
         const PARAMETROS = req.body
+        // Validar token de API
+        if (!PARAMETROS?.token || PARAMETROS.token !== process.env.EMAIL_API_TOKEN) {
+            return res.status(401).send({ stat: false, error: 'No autorizado' })
+        }
         console.log(PARAMETROS)
         if (!PARAMETROS?.to || !PARAMETROS?.subject || !PARAMETROS?.text || !PARAMETROS?.html) {
             console.log("revisar parametros")
@@ -60,7 +64,11 @@ const telegramRateLimit = rateLimit({
 // Endpoint para enviar mensajes a Telegram usando alias
 app.post('/telegram', telegramRateLimit, function telegramHandler(req, res) {
     try {
-        const { alias, message, parse_mode, disable_web_page_preview, disable_notification } = req.body
+        const { alias, message, parse_mode, disable_web_page_preview, disable_notification, token } = req.body
+        // Validar token de API para telegram
+        if (!token || token !== process.env.TELEGRAM_API_TOKEN) {
+            return res.status(401).send({ stat: false, error: 'No autorizado' })
+        }
         console.log('Parámetros Telegram:', req.body)
 
         if (!alias || !message) {
@@ -80,7 +88,7 @@ app.post('/telegram', telegramRateLimit, function telegramHandler(req, res) {
         if (!botToken || !chatId) {
             res.status(400).send({
                 stat: false,
-                error: `Alias '${alias}' no existe o está mal configurado. Variables requeridas: ${botTokenVar}, ${chatIdVar}`
+                error: `Revise configuración`
             })
             return
         }
