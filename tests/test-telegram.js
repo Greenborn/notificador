@@ -78,7 +78,8 @@ async function enviarMensajeTelegram(alias, mensaje) {
         const datosMensaje = {
             alias: alias.name,
             message: mensaje,
-            parse_mode: 'HTML'
+            parse_mode: 'HTML',
+            token: process.env.TELEGRAM_API_TOKEN
         };
 
         const response = await fetch(`${SERVER_URL}/telegram`, {

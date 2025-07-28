@@ -30,7 +30,11 @@ function emailHandler(req, res) {
                 res.status(200).send({ stat: true })
             })
             .catch((error) => {
-                console.log('Error ', error)
+                if (error?.response?.body?.errors) {
+                    console.log('Error SendGrid:', error.response.body.errors)
+                } else {
+                    console.log('Error ', error)
+                }
                 res.status(500).send({ stat: false })
             })
     } catch (error) {
