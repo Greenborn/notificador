@@ -30,6 +30,9 @@ PUERTO=3000
 TELEGRAM_BOT_[ALIAS]_TOKEN=token_de_tu_bot
 TELEGRAM_[ALIAS]_CHAT_ID=id_del_grupo_o_chat
 
+# Límite de mensajes por IP para /telegram (por hora)
+TELEGRAM_RATE_LIMIT=5
+
 # Ejemplos:
 TELEGRAM_BOT_ALERTAS_TOKEN=123456:ABCDEF
 TELEGRAM_ALERTAS_CHAT_ID=-123456789
@@ -230,6 +233,15 @@ enviarEmail();
 ### Endpoint de Telegram
 
 **URL:** `POST /telegram`
+
+**Rate limit:** Por defecto, cada IP puede enviar hasta 5 mensajes por hora a este endpoint. Este límite se puede configurar con la variable `TELEGRAM_RATE_LIMIT` en el archivo `.env`. Si se supera el límite, la API responderá:
+
+```json
+{
+    "stat": false,
+    "error": "Demasiados mensajes enviados desde esta IP. Intenta nuevamente en una hora."
+}
+```
 
 **Headers requeridos:**
 ```

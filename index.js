@@ -3,6 +3,7 @@ const TelegramBot = require('node-telegram-bot-api')
 require("dotenv").config({ path: '.env' })
 const express = require('express')
 const bodyParser = require("body-parser")
+const rateLimit = require('express-rate-limit')
 
 const app = express()
 app.use(express.json())
@@ -44,8 +45,20 @@ app.post('/email', function requestHandler(req, res) {
     
 });
 
+// Configuración de rate limit para /telegram
+const telegramRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: parseInt(process.env.TELEGRAM_RATE_LIMIT) || 5,
+    message: {
+        stat: false,
+        error: 'Demasiados mensajes enviados desde esta IP. Intenta nuevamente en una hora.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+})
+
 // Endpoint para enviar mensajes a Telegram usando alias
-app.post('/telegram', function telegramHandler(req, res) {
+app.post('/telegram', telegramRateLimit, function telegramHandler(req, res) {
     try {
         const { alias, message, parse_mode, disable_web_page_preview, disable_notification } = req.body
         console.log('Parámetros Telegram:', req.body)
