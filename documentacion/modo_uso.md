@@ -31,13 +31,16 @@ EMAIL_API_TOKEN=mi_token_secreto
 # Token de autenticación para el endpoint /telegram
 TELEGRAM_API_TOKEN=mi_token_telegram
 
+# Orígenes permitidos para CORS (separados por coma, por ejemplo: http://localhost:3000,http://midominio.com)
+CORS_ORIGINS=*
+
+# Intervalo de envío de mensajes de Telegram (en milisegundos)
+TELEGRAM_SEND_INTERVAL_MS=10000
+
 # Configuración de Telegram (sistema de alias)
 # Para cada alias que quieras usar, define:
 TELEGRAM_BOT_[ALIAS]_TOKEN=token_de_tu_bot
 TELEGRAM_[ALIAS]_CHAT_ID=id_del_grupo_o_chat
-
-# Límite de mensajes por IP para /telegram (por hora)
-TELEGRAM_RATE_LIMIT=5
 
 # Ejemplos:
 TELEGRAM_BOT_ALERTAS_TOKEN=123456:ABCDEF
@@ -254,42 +257,32 @@ enviarEmail();
 
 **Autenticación:** Este endpoint requiere un token de API. Debes enviar el parámetro `token` en el body de la petición, cuyo valor debe coincidir con la variable `TELEGRAM_API_TOKEN` configurada en el archivo `.env`.
 
-Si el token es incorrecto o falta, la respuesta será:
+**Cola de envío:**
+- El endpoint **no envía el mensaje de inmediato**. En su lugar, agrega la solicitud a una cola interna (`COLA_TELEGRAM`).
+- Los mensajes en la cola se procesan y envían al bot de Telegram uno por uno, respetando el intervalo configurado en la variable `TELEGRAM_SEND_INTERVAL_MS` (por defecto: 10 segundos).
+- La respuesta del endpoint indica que el mensaje fue agregado a la cola y cuántos mensajes hay pendientes:
 
 ```json
 {
-    "stat": false,
-    "error": "No autorizado"
+    "stat": true,
+    "enCola": 3
 }
 ```
 
-**Headers requeridos:**
-```
-Content-Type: application/json
-```
+**Advertencia:**
+- Si se envían muchos mensajes en poco tiempo, estos quedarán encolados y se enviarán de a uno según el intervalo configurado.
+- Si un alias está mal configurado, el mensaje será descartado y se registrará un error en el log del servidor.
 
-### Parámetros de Entrada
-
-| Parámetro | Tipo   | Requerido | Descripción                    |
-|-----------|--------|-----------|--------------------------------|
-| `alias`   | string | Sí        | Alias configurado en variables de entorno |
-| `message` | string | Sí        | Contenido del mensaje          |
-| `token`   | string | Sí        | Token de autenticación         |
-| `parse_mode` | string | No     | Modo de formato ('HTML', 'Markdown') |
-| `disable_web_page_preview` | boolean | No | Deshabilitar vista previa de enlaces |
-| `disable_notification` | boolean | No | Enviar sin notificación |
-
-### Ejemplos de Uso
-
-#### 1. Uso con cURL
+**Ejemplo de uso:**
 
 ```bash
 curl -X POST http://localhost:3000/telegram \
   -H "Content-Type: application/json" \
   -d '{
     "alias": "alertas",
-    "message": "<b>Alerta</b>\nSe detectó un error crítico.",
-    "parse_mode": "HTML"
+    "message": "<b>Alerta</b> Mensaje de prueba.",
+    "parse_mode": "HTML",
+    "token": "mi_token_telegram"
   }'
 ```
 
