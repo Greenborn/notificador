@@ -137,9 +137,25 @@ TELEGRAM_SOPORTE_CHAT_ID=-987654321
 
 **POST /telegram**
 
-Parámetros requeridos:
+- Ahora el endpoint **no envía el mensaje de inmediato**. En su lugar, agrega la solicitud a una cola interna (`COLA_TELEGRAM`).
+- Los mensajes en la cola se procesan y envían al bot de Telegram uno por uno, respetando el intervalo configurado en la variable `TELEGRAM_SEND_INTERVAL_MS` (por defecto: 10 segundos).
+- La respuesta del endpoint indica que el mensaje fue agregado a la cola y cuántos mensajes hay pendientes:
+
+```json
+{
+  "stat": true,
+  "enCola": 3
+}
+```
+
+**Advertencia:**
+- Si se envían muchos mensajes en poco tiempo, estos quedarán encolados y se enviarán de a uno según el intervalo configurado.
+- Si un alias está mal configurado, el mensaje será descartado y se registrará un error en el log del servidor.
+
+**Parámetros requeridos:**
 - `alias`: el alias definido en las variables de entorno
 - `message`: el mensaje a enviar
+- `token`: token de autenticación definido en `TELEGRAM_API_TOKEN` en el `.env`
 
 Parámetros opcionales:
 - `parse_mode`: 'HTML', 'Markdown', etc. (por defecto 'HTML')
@@ -150,8 +166,9 @@ Ejemplo de request:
 ```json
 {
   "alias": "alertas",
-  "message": "<b>Alerta</b>\nSe detectó un error crítico.",
-  "parse_mode": "HTML"
+  "message": "<b>Alerta</b> Mensaje de prueba.",
+  "parse_mode": "HTML",
+  "token": "mi_token_telegram"
 }
 ```
 
@@ -212,6 +229,10 @@ El resto de la funcionalidad del microservicio (envío de emails) no se ve afect
 | `TELEGRAM_BOT_[ALIAS]_TOKEN` | Token del bot para cada alias | No | `123456789:ABCdefGHIjklMNOpqrsTUVwxyz` |
 | `TELEGRAM_[ALIAS]_CHAT_ID` | Chat ID para cada alias | No | `-123456789` |
 | `PUERTO` | Puerto del servidor | No | `3000` |
+| `TELEGRAM_SEND_INTERVAL_MS` | Intervalo de envío de mensajes de Telegram (milisegundos) | No | `10000` |
+| `TELEGRAM_API_TOKEN` | Token de autenticación para /telegram | Sí | `mi_token_telegram` |
+| `EMAIL_API_TOKEN` | Token de autenticación para /email | Sí | `mi_token_secreto` |
+| `CORS_ORIGINS` | Orígenes permitidos para CORS | No | `*` o `http://localhost:3000` |
 
 ### Archivo .env
 ```bash
@@ -324,6 +345,12 @@ Para soporte técnico o preguntas sobre el proyecto:
 - 📖 Documentación: [Ver documentación](./documentacion/)
 
 ## Changelog
+
+### v1.4.0
+- ✅ Cola de envío para Telegram (`COLA_TELEGRAM`)
+- ✅ Variable `TELEGRAM_SEND_INTERVAL_MS` para configurar intervalo de envío
+- ✅ Endpoint `/telegram` ahora agrega a la cola y responde con el estado de la cola
+- ✅ Documentación y ejemplos actualizados
 
 ### v1.3.0
 - ✅ Parámetro `from` requerido en endpoint de email
