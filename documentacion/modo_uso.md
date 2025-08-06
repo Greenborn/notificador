@@ -20,9 +20,23 @@ npm install
 
 Crear el archivo `.env` en la raíz del proyecto:
 
+
 ```bash
 # Archivo .env
+
+# Proveedor de email: sendgrid o nodemailer
+PROVEEDOR_EMAIL=sendgrid
+
+# Configuración de SendGrid para emails (si usas SendGrid)
 SENDGRID_API_KEY=tu_api_key_de_sendgrid
+
+# Configuración de SMTP para emails (si usas nodemailer)
+# SMTP_HOST=smtp.tu-servidor.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=usuario@dominio.com
+# SMTP_PASS=tu_contraseña
+
 PUERTO=3000
 
 # Token de autenticación para el endpoint /email
@@ -49,12 +63,30 @@ TELEGRAM_BOT_SOPORTE_TOKEN=987654:ZYXWVU
 TELEGRAM_SOPORTE_CHAT_ID=-987654321
 ```
 
-#### Obtención de API Key de SendGrid
+
+#### Selección de proveedor de email
+
+Define la variable `PROVEEDOR_EMAIL` en tu archivo `.env`:
+
+- `sendgrid`: Usará la API de SendGrid para enviar emails.
+- `nodemailer`: Usará SMTP a través de Nodemailer. Debes configurar los datos SMTP.
+
+#### Configuración de SendGrid
 
 1. Crear cuenta en [SendGrid](https://sendgrid.com/)
 2. Ir a Settings > API Keys
 3. Crear una nueva API Key con permisos de "Mail Send"
-4. Copiar la clave y agregarla al archivo `.env`
+4. Copiar la clave y agregarla al archivo `.env` en `SENDGRID_API_KEY`
+
+#### Configuración de SMTP (Nodemailer)
+
+Si usas `nodemailer` como proveedor, debes definir las siguientes variables en tu `.env`:
+
+- `SMTP_HOST`: Host del servidor SMTP (ej: smtp.gmail.com)
+- `SMTP_PORT`: Puerto SMTP (ej: 587)
+- `SMTP_SECURE`: true si el puerto es seguro (465), false para STARTTLS (587)
+- `SMTP_USER`: Usuario de la cuenta SMTP
+- `SMTP_PASS`: Contraseña de la cuenta SMTP
 
 #### Configuración de Telegram
 
