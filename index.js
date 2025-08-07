@@ -48,4 +48,23 @@ setTimeout(async () => {
     const puerto = process.env.PUERTO || 3000;
     const server = await app.listen(puerto);
     console.log('Servidor escuchando en: ', puerto) 
+    // Iniciar el SMTP listener si las propiedades están definidas
+    if (
+      process.env.SMTP_LISTEN_HOST &&
+      process.env.SMTP_LISTEN_PORT &&
+      process.env.SMTP_LISTEN_USER &&
+      process.env.SMTP_LISTEN_PASS
+    ) {
+      console.log('Iniciando SMTP listener...');
+      const { spawn } = require('child_process');
+      const smtpListener = spawn('node', ['smtp-listener.js'], {
+        cwd: __dirname,
+        stdio: 'inherit'
+      });
+      smtpListener.on('error', (err) => {
+        console.error('Error al iniciar el SMTP listener:', err);
+      });
+    } else {
+      console.log('No se iniciará el SMTP listener: configuración incompleta.');
+    }
 }, 100)
